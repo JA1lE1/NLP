@@ -1,0 +1,11 @@
+#!wing
+#!version=6.0
+##################################################################
+# Wing IDE project file                                          #
+##################################################################
+[project attributes]
+proj.file-list = [loc('clean_text_nltk.py'),
+                  loc('metamorphosis_clean.txt'),
+                  loc('nltk-tutorial.py'),
+                  loc('spaCy-tutorial.py')]
+proj.file-type = 'shared'
