@@ -2,7 +2,7 @@
 import jieba
 import re
 from tokenizer import cut_hanlp
-jieba.load_userdict("dict.txt")
+#jieba.load_userdict("dict.txt")
 
 def merge_two_list(a, b):
     c=[]

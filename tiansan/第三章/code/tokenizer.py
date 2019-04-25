@@ -3,7 +3,7 @@ import os,gc,re,sys
 
 from jpype import *
 #root_path="D:\\change\\chunking\\module\\hanlp"
-root_path="E:\work\software\hanlp\hanlp"
+root_path='E:\work\software\hanlp\hanlp'
 djclass_path="-Djava.class.path="+root_path+os.sep+"hanlp-1.5.0.jar;"+root_path
 startJVM(getDefaultJVMPath(),djclass_path,"-Xms1g","-Xmx1g")
 
