@@ -165,3 +165,20 @@ Embeding层：
 
 - predict的部分需要再修改一下（可能）
 - model的部分，也就是论文的Neural Model的部分需要再详细研究一下
+
+
+
+---
+
+### 2019.4.26
+
+### pytorch
+
+- [官网的DL for NLP的tutorial](<https://pytorch.org/tutorials/beginner/nlp/word_embeddings_tutorial.html>)
+  - n-gram
+    - log_softmax
+      - ==为什么使用这个激活函数==
+    - NLLLoss()
+      - The negative log likelihood loss
+    - 以上两者的结合？？
+
