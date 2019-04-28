@@ -11,7 +11,7 @@ Tokenizer = JClass('com.hankcs.hanlp.tokenizer.StandardTokenizer')
 
 def to_string(sentence,return_generator=False):
     if return_generator:
-        return (word_pos_item.toString().split('/') for word_pos_item in Tokenizer.segment(sentence))
+        return (word_pos_item.toString().split('/') for word_pos_item in Tokenizer.segment(sentence))    ## 这是返回一个生成器
     else:
         return " ".join([word_pos_item.toString().split('/')[0] for word_pos_item in Tokenizer.segment(sentence)]   )
     

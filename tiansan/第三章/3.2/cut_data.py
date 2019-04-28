@@ -23,7 +23,7 @@ def merge_two_list(a, b):
 
 
 if __name__=="__main__":
-    fp=open("text.txt","r",encoding="utf8")
+    fp=open("text.txt","r",encoding="utf8")               # python读取文件的方式,文件名,mode, 编码方式
     fout=open("result_cut.txt","w",encoding="utf8")    
     regex1=u'(?:[^\u4e00-\u9fa5（）*&……%￥$，,。.@! ！]){1,5}期'
     regex2=r'(?:[0-9]{1,3}[.]?[0-9]{1,3})%'
