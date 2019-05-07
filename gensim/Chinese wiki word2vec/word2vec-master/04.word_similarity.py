@@ -16,6 +16,7 @@ from gensim.models.word2vec import Word2Vec, LineSentence
 import sys, logging, os.path
 import multiprocessing
 from config import Config
+import gensim
 
 
 def word_similarity(word, model):
@@ -40,7 +41,7 @@ if __name__ == '__main__':
     _config = Config()
     # 读取模型
     model = Word2Vec.load(_config.embedded_model_t2s)
-    # model.save_word2vec_format('embedding_model_t2s/zhwiki_embedding_t2s.model.bin', binary=True)
+    # model.save_word2vec_format('embedding_model_t2s/zhwiki_embedding_t2s.model.bin', binary=True) Use model.wv.save_word2vec_format
     # 取相似的词
-    print(model.vocab)
+    # print(model.vocab)
     word_similarity(['腾讯', '百度'], model)

@@ -1,0 +1,4 @@
+2019/05/06 16:49:08 - __main__ - INFO - 50 - log_and_attention - This is a log info
+2019/05/06 16:49:08 - __main__ - DEBUG - 51 - log_and_attention - Debugging
+2019/05/06 16:49:08 - __main__ - WARNING - 52 - log_and_attention - Warning exists
+2019/05/06 16:49:08 - __main__ - INFO - 53 - log_and_attention - Finish
