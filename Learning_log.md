@@ -1,5 +1,9 @@
 #  Learning_log
 
+## 2019.5.5
+
+- gensim
+
 ## 2019.4.28
 
 - 对hanlp的方法使用初步了解，官网的python-demo可以结合学习
