@@ -1,6 +1,519 @@
 # README
 
-## 最新内容（每次更新删除上一版的最新）
+## 5.21 代码理解
+
+### 代码块（explore）
+
+- 以最新的new_explore.py为主
+
+#### 导入模块
+
+#### 主函数
+
+- 定义超参数
+
+  - 这里需要==后期维护更新==
+
+- 变量==tokenized_docs== 
+
+  - ==data_prepare的返回值处理结果==
+
+    - ```python
+      tokenized_docs = [(i, doc) for i, doc in enumerate(data_prepare())]
+      #type(tokenized_docs)
+      <class 'list'>
+      # tokenized_docs[0]  (有省略)
+      (0, ['欧几里得', '西元前', '世纪', '古希腊', '数学家', '几何', '父', '此画', '拉斐尔', '作品', '雅典', '学院', '数学', '利用', '符号语言', '研究', '数量', '结构', '变化', '空间', '概念', '一门', '学科', '某种''究生', '中学老师', '学生', '数学', '学习', '资源', '互联网', '数学', '学习', '资源', '教学', '视频', '英汉', '对照', '数学', '用语', '英汉', '对照', '数学', '用语'])
+      ```
+
+- remove short documents
+
+  - 删除短的文章 （开头设置超参数）
+
+  - ==疑问==
+
+    - ```python
+      # 计算较短文章的个数
+      n_short_docs = sum(1 for i, doc in tokenized_docs if len(doc) < min_length)
+      ```
+
+    - 测试
+
+      - ```python
+        sum(1 for i_ in range(3) if i_ > 1)
+        1
+        sum(2 for i_ in range(3) if i_ > 1)
+        2
+        sum(3 for i_ in range(3) if i_ > 1)
+        3
+        ```
+
+- remove some tokens
+
+  - 删掉出现次数过多的token 和次数过少的token
+
+- 生成数据
+
+  - 以encoded_docs 来生成 具体看==变量==部分的==data== 
+    - 使用==get_windows 函数==
+  - 生成gensim训练所需要的text 这里是将encoded_docs 的doc（以数字组成的doc）转成‘645’，‘234’ 这种格式的doc
+
+- word2vec预训练
+
+- 将训练好的词（这里是‘234’ 这种词形式）向量 用numpy格式保存
+
+  - ```python
+    word_vectors = np.zeros((vocab_size, embedding_dim)).astype('float32')
+    for i in decoder:
+        word_vectors[i] = model.wv[str(i)]
+    ```
+
+- 为训练LDA做准备（==这个需要结合官方和其他的lda实验加深理解==）
+
+  - 这次输入的corpus是真是的txt，然后应该是用方法的训练方法 用到了
+
+    - ```python
+      dictionary = corpora.Dictionary(texts)
+      ```
+
+    - 可能是为了更好地Interprete
+
+  - texts 格式
+
+    - ```python
+      ['世纪', '古希腊', '数学', '研究', '结构', '概念', '形式', '科学', '一种', '数学', '计算', '概念', '数学', '古希腊', '数学',  '哲学', '数学', '数学', '数学', '数学', '一个', '数学', '数学', '一个', '数学', '一个', '数学', '一个', '研究', '数学', '文化', '数学', '数学', '数学', '数学']
+      ```
+
+  - dictionary
+
+    - ```python
+      dictionary = corpora.Dictionary(texts)
+      corpus = [dictionary.doc2bow(text) for text in texts]
+      #Convert `document` into the bag-of-words (BoW) format = list of `(token_id, token_count)
+      #eg
+      >>> from gensim.corpora import Dictionary
+                  >>> dct = Dictionary(["máma mele maso".split(), "ema má máma".split()])
+                  >>> dct.doc2bow(["this", "is", "máma"])
+                  [(2, 1)]
+                  >>> dct.doc2bow(["this", "is", "máma"], return_missing=True)
+                  ([(2, 1)], {u'this': 1, u'is': 1})
+      
+      ```
+
+    - 注意Dictionary是一个class类 有很多的Attribute 具体见。。。以上是doc2bow的方法返回的词袋模型
+
+- LDA
+
+  - ```python
+    lda = models.LdaModel(corpus, alpha=0.9, id2word=dictionary, num_topics=n_topics)
+    corpus_lda = lda[corpus]
+    # lda 的训练 并且显示各个文章的主题分布 主题个数是超参数 可以设置
+    # 这里要注意的是第二句 是否可以用于和训练数据无关的数据
+    # 参数alpha的意义是？？？
+    ## debug
+    corpus_lda[1]
+    [(5, 0.015422589), (19, 0.09541435), (22, 0.8042764)]
+    corpus_lda[0]
+    [(8, 0.8839177), (18, 0.010522466)]
+    #  以 第二篇文章 下标为1 这里表示第五个主题 0.00xxx 第22个主题占得最多
+    # 但是主题是否需要将word显示出来一下呢 不然我怎么标记主题的名字
+    lda.show_topics貌似可以
+    ```
+
+  - ==变量== doc_weights_init
+
+    - 存储的是每篇文章的主题分布
+
+    - ```
+      doc_weights_init[i, j] = prob
+      # i 代表的是 第i篇文章 j代表的是第j个主题 prob代表的是响应的概率
+      ```
+
+##### 保存的变量
+
+- data
+- word_vectors
+- unigram_distribution
+- decoder
+- doc_weights_init
+
+##### 可能出现的隐患
+
+- 我把 *np.save('doc_decoder.npy', doc_decoder)* 这个注释了 代码中的响应处理也注释了 不过貌似有问题的 ==待==
+- 
+
+####  辅助函数
+
+##### ==data_prepare==
+
+- 使用WikiCorpous 处理wiki语料 xml的压缩文件(==这里可以作为下一步工作的入手点==)
+
+- 载入停用词词典
+
+- 使用wikicorpus生成器载入text数据节省内存，每次读入一篇文章
+
+  - ```
+    for text in wiki.get_texts():
+            text = ' '.join(text)
+            text = HanziConv.toSimplified(text)
+            #re.sub('[：·•’!\"#$%&\'()*+，,-./:：;；<=>?@，。?★、…【】《》？“”〞‘’！[\\]^_`{}（）~]+', "", text)
+            text = text.strip()
+            seg_list = list(jieba.cut(text))
+            # ['歐幾里', '得', ' ', '西元前', '三世', '紀的', '古希臘', '數學家', ' ', '現在', '被', '認
+            #  '是', '幾何', '之父', ' ', '此畫', '為拉斐爾', '的', '作品', ' ', '雅典', '學院']
+            new_text = [x for x in seg_list  if  (re.compile(u'[\u4e00-\u9fa5]+').search(x) or \
+                            re.compile("[\"”“，？?\,\.。,0-9]+").search(x)) and (x not in stopwords)]
+    ```
+
+  - text 是list 变量 将其转成字符串 用 '  '.join(text)的方法转成str的格式方便分词
+
+    - ```
+      '歐幾里得 西元前三世紀的古希臘數學家 現在被認為是幾何之父 此畫為拉斐爾的作品 雅典學院 数学 是利用符号语言研究數量 结构 变化以及空间等概念和研究生 以及中学老师和学生 数学学习资源 互联网上数学学习资源和教学视频 英漢對照數學用語 archive 英漢對照數學用語 albany bureau of bilingual education see profile at archive'
+      ```
+
+  - 繁体化成简体
+
+  - 使用str.strip()删掉空格的等？？
+
+  - 转成seg_list分词后的list形式的txt数据
+
+    - ```
+      ['欧几里得', ' ', '西元前', '三', '世纪', '的', '古希腊', '数学家', ' ', '现在', '被', '认为', '是', '几何', '之', '父', ' ', '此画', '为', '拉斐尔', '的', '作品', ' ', '雅典', '学院', ' ', '数学', ' ', '是', '利用', '符号语言', '研究', '数量', ', '其', '形容词', ' ', '意思', '为', ', ' ', '秦九韶', '的', ' ', '数学', '九章', ' ', '永乐'' ', '英汉', '对照', '数学', '用语', ' ', 'archive', ' ', '英汉', '对照', '数学', '用语', ' ', 'albany', ' ', 'bureau', ' ', 'of', ' ', 'bilingual', ' ', 'education', ' ', 'see', ' ', 'profile', ' ', 'at', ' ', 'archive']
+      ```
+
+    - 可以看到有空格和英文，因此使用正则保存只有中文的字符
+
+  - 使用正则后 返回 单个文档的text （list形式） ==使用yield== 的方法节省内存的使用
+
+##### _count_unique_tokens
+
+- ```python
+  # 数据形式
+  ['欧几里得', '西元前', '世纪', '古希腊', '数学家', '几何', '父', '此画', '拉斐尔', '作品', '雅典', '学院', '数学', '利用', '符号语言', '研究', '数量', '结构', '变化', '空间', '概念', '一门', '学科', '某种', '角度看', '形式', '科学', '一种', '数学', '透过', '抽象化', '逻辑推理', '计数', '计算', '数学家', '拓展', '概念', '数学', '基本概念', '完善', '早', '古埃及', '古希腊', '严谨', '数学', '发展', '持续', '小幅', '方哲学', '论题', '张汝伦', '哲学', '出路', '在于', '智慧', '张汝伦', '张汝伦', '哲学', '无用', '之用', '扩展', '阅读', '艾伦', '布洛克', '艾伦', '布洛克', '入门', '专题', '介绍', '选集', '陈荣捷', '参考', '作', '陈荣捷']
+  ```
+
+- 目的
+
+  - 将所有的文档转成所有的token组成的doc 如上所示（有删减）
+
+- 返回值 
+
+  - Counter 格式
+
+    - ```python
+      #count elements from a string
+      c = Counter('abcdeabcdabcaba')  # count elements from a string
+      
+      c.most_common(3)                # three most common elements
+          [('a', 5), ('b', 4), ('c', 3)]
+      sorted(c)                       # list all unique elements
+          ['a', 'b', 'c', 'd', 'e']
+      ''.join(sorted(c.elements()))   # list elements with repetitions
+          'aaaaabbbbcccdde'
+      sum(c.values())                 # total of all counts
+      ```
+
+    - 
+
+##### _remove_tokens
+
+- 输入 
+  - 
+
+- total_tokens_count
+  - 计算所有的token的数量
+- unknown_tokens_count
+  - 计算所有的**过大出现次数**的token和**过少出现次数**的token的数量之和
+- 返回值
+  - 返回值依然是所有token组成的list，这次加了删掉上述的unknown token
+
+##### _create_token_encoder
+
+- 输入
+  - counts
+  - _count_unique_tokens的输出结果 Counter的形式
+
+- total_tokens_count
+  - 计算所有的token的数量
+
+- 返回值
+
+  - encoder， decoder， word_counts
+
+  - ```python
+    encoder[token] = i
+    decoder[i] = token
+    word_counts.append(count)
+    # 注：这个word_counts 是为了后面的Negative Sampling 按照token的出现次数多寡进行排序组成list，元素是token出现的次数
+    ```
+
+##### _encode
+
+- 使用encoder将txt转为数字
+
+- 返回的格式和tokenized_docs 的格式一致
+
+  - ```
+    # encoded_docs[0]
+    (0, [13, 39, 3, 6, 37, 25, 22, 18, 20, 3, 19, 25, 3, 39, 3, 16, 13, 27, 3, 16, 3, 28, 7, 21, 18, 32, 3, 16, 6, 3, 6, 7, 38, 26, 7, 3, 39, 18, 3, 6, 3, 7, 22, 7, 22, 25, 3, 10, 27, 3, 3, 3, 3, 3, 3, 10, 3,12, 3, 12, 6, 3, 45, 3, 3, 3, 3])
+    ```
+
+  - 
+
+### 变量
+
+- data
+
+  - ```python
+    data = np.load('data.npy')
+    #这个data是数据预处理是get_windows后的数据结果，它旨在生成数据集(),注意数值是text decode 后的数值型数据
+    data = begining + inside + end
+    #三个格式都是list，
+    #eg. inside 
+    inside[0] = (145, [687, 1649, 15, 46, 113, 963, 1650, 964, 67, 688])
+    inside_txt= (decoder[inside[0][0]],[decoder[context] for context in inside[0][1]])
+    inside_txt
+    ('几何', ['欧几里得', '西元前', '世纪', '古希腊', '数学家', '父', '此画', '拉斐尔', '作品', '雅典'])
+    # 这个地方一方面我们看到分词的时候把 三世纪 的三 给删掉了（stop words） 一方面还把是删掉了 可见这个stopwords需要整改
+    # begining
+    beginning_txt
+    ('欧几里得', ['西元前', '世纪', '古希腊', '数学家', '几何', '父', '此画', '拉斐尔', '作品', '雅典'])
+    
+    
+    ## 原因
+    #txt的前后的字符在5个(window_size)以内的中间的字符数据生成的训练数据是不一样的
+    ##最终格式
+    tes = (1,[1,2,3]) + (2,[3,4,5])
+    tes
+    (1, [1, 2, 3], 2, [3, 4, 5])
+    #最后的形式应该是[[1,2,3,4.....],[[1,2,3],[3,4,5],[xxx],....[xxx]]
+    
+    [0, 687] + [1649, 15, 46, 113, 145, 963, 1650, 964, 67, 688]
+    = [0, 687, 1649, 15, 46, 113, 145, 963, 1650, 964, 67, 688]
+    
+    # data 没有转成numpy的最后的形式，转成numpy可以理解为 为pytorch的dataloader服务
+    # 下面是data的element的基本的形式
+    data[0]
+    [0, 687, 1649, 15, 46, 113, 145, 963, 1650, 964, 67, 688]
+    data[-1]
+    [9, 850, 4410, 714, 34, 2, 904, 848, 591, 259, 4411, 907]
+    # 这里我只有测试10篇doc 因此最后的是doc序号是9(以下标1开始)
+    # 而我们可以看出是data这里是将所有的语料库转为每个word(pivotol)的形式的数据(基于skgram模型)但是 这样做会有一个问题 内存爆炸！！！（因此python如何释放内存呢？）
+    ```
+
+- unigram_distribution
+
+  - ```python
+    # 目的应该是为了negative sampling
+    # 来源
+    word_counts = np.array(word_counts)
+    unigram_distribution = word_counts/sum(word_counts)
+    # word_counts 来源
+    def _create_token_encoder(counts):
+    
+        total_tokens_count = sum(
+            count for token, count in counts.most_common()
+        )
+        print('total number of tokens:', total_tokens_count)
+    
+        encoder = {}
+        decoder = {}
+        word_counts = []
+        i = 0
+    
+        for token, count in counts.most_common():
+            # counts.most_common() is in decreasing count order
+            #def most_common(n=None)
+            #List the n most common elements and their counts from the most common to 		  #the least. If n is None, then list all element counts.
+    		#Counter('abcdeabcdabcaba').most_common(3) [('a', 5), ('b', 4), ('c', 3)]
+            encoder[token] = i
+            decoder[i] = token
+            word_counts.append(count)
+            i += 1
+    
+        return encoder, decoder, word_counts
+    
+    ##
+    ```
+
+### 代码块（train）
+
+- 开头
+
+  - > ​    *# transform to logits*
+    >
+    > ​    doc_weights_init **=** np.log(doc_weights_init **+** 1e-4)
+    >
+    > ​    *# make distribution softer*
+    >
+    > ​    temperature **=** 7.0
+    >
+    > ​    doc_weights_init **/=** temperature
+    >
+    > ​    *# if you want to train the model like in the original paper*
+    >
+    > ​    *# set doc_weights_init=None*
+    >
+    > ///   这个是神马意思呢？？
+
+#### 变量
+
+- doc_ids
+
+
+
+#### 代码句
+
+```python
+unique_docs, counts = np.unique(doc_ids, return_counts=True)
+# np.unique 的使用见下面的调试过程
+xy = [2,3,2,33,2,3,4,1]
+a, s = np.unique(xy, return_counts=True)
+a
+array([ 1,  2,  3,  4, 33])
+s
+array([1, 3, 2, 1, 1], dtype=int64)
+# s返回的是xy 中元素的出现的次数 对应的是a的元素
+```
+
+
+
+#### pytorch
+
+- unsqueeze
+
+  - ```
+    >>> a = torch.tensor([1,2])
+    >>> a.unsqueeze(0)
+    tensor([[1, 2]])
+    >>> a.unsqueeze(1)
+    tensor([[1],
+            [2]])
+    ```
+
+  - 就是0 是最外面的元素套一个[], 1是倒数第二层的元素套一个【】，以此类推
+
+
+
+## 5.20 代码理解
+
+- intuition
+  - 上次exp1预训练完lda 和 word2vec貌似有问题在train上都出现了问题，毫无疑问的是代码需要理解一下
+
+
+
+## 5.19 整理exp1的经验，exp2 遇到的问题
+
+- exp2
+
+  - debug
+
+    - ```
+      number of documents: 313241
+      number of windows: 41679315
+      number of topics: 25
+      vocabulary size: 267969
+      word embedding dim: 50
+      /home/jupyter/explore_chinese_lda2vec/utils/lda2vec_loss.py:47: UserWarning: nn.init.normal is now deprecated in favor of nn.init.normal_.
+        init.normal(self.doc_weights.weight, std=DOC_WEIGHTS_INIT)
+      number of batches: 5815
+      epoch 1
+        0%|                                                                                                                                                             | 0/5815 [00:00<?, ?it/s]
+      /home/jupyter/explore_chinese_lda2vec/utils/lda2vec_loss.py:196: UserWarning: Implicit dimension choice for softmax has been deprecated. Change the call to include dim=X as an argument.
+        doc_probs = F.softmax(doc_weights)
+        
+      Traceback (most recent call last):
+        File "train.py", line 36, in <module>
+          main()
+        File "train.py", line 32, in main
+          save_every=20, grad_clip=5.0
+        File "/home/jupyter/explore_chinese_lda2vec/utils/training.py", line 127, in train
+          neg_loss, dirichlet_loss = model(doc_indices, pivot_words, target_words)
+        File "/usr/local/lib/python3.5/dist-packages/torch/nn/modules/module.py", line 493, in __call__
+          result = self.forward(*input, **kwargs)
+        File "/home/jupyter/explore_chinese_lda2vec/utils/lda2vec_loss.py", line 70, in forward
+          doc_vectors = self.topics(doc_weights)
+        File "/usr/local/lib/python3.5/dist-packages/torch/nn/modules/module.py", line 493, in __call__
+          result = self.forward(*input, **kwargs)
+        File "/home/jupyter/explore_chinese_lda2vec/utils/lda2vec_loss.py", line 206, in forward
+          doc_vectors = (unsqueezed_doc_probs*unsqueezed_topic_vectors).sum(1)
+      RuntimeError: The size of tensor a (35) must match the size of tensor b (25) at non-singleton dimension 1
+      ```
+
+    - 
+
+## 5.17
+
+- 先行进行gensim的官方tutorial 然后对比与之区别，现在版本更新很快需要及时更新代码的version 
+
+###  新的想法
+
+- 尝试一下最新的gensim的训练方法和存储方式
+- 写下原来的程序的思路
+- 在gensim官方上查看最新的方法进行更新
+
+#### 训练方法
+
+- 直接开始尝试
+
+### 原来的思路
+
+##### 数据准备
+
+- wiki.get_text() 获得yield返回的list，因其含有繁体且是list 没法分词，因此先转成str 再化成简体再分词，分完词后转成list类型
+  - 这相当于训练的数据准备，==附加产品有encoder，decoder genism 现在肯定有对应的可以找一下== 至于word_counts 记录字典中每个token出现的个数，是一个==debug== ，用于后面算==算unigram distribution==
+  - preprocess 的最后返回值 encoded_docs 是 文档的编码换成字典中对应的数字代码，decoder就是id-》token ，word_counts就是list，中含有每个字典中的token的个数降序排序，只保留有数值
+  - ==以上内容需要debug，并给出example==
+
+##### Get unigram distribution
+
+==这个还不知道是干嘛用==
+
+##### 词向量预训练
+
+- ```python
+  texts = [[str(j) for j in doc] for i, doc in encoded_docs]
+  # 最骚的是忙活了半天 又换一个格式
+  model.init_sims(replace=True)
+  # 这个是干嘛用的
+  # 参数
+  workers=4, sg=1, negative=15, iter=70  # 这几个参数是干嘛用的
+  ```
+
+- 最后词向量训练完成后它使用numpy去保存此项来那个 word_vectors 这里相当于\i    vecotr \ i 就是decoder的序号， vector就是训练的向量
+
+- 导入的参数 texts 是encoded_docs 我感觉有点不妥 也没必要 ==可以但没必要==
+
+- ==参数==
+
+  - ==worker==
+    - The `workers` parameter only has an effect if you have [Cython](http://cython.org/) installed. Without Cython, you’ll only be able to use one core because of the [GIL](https://wiki.python.org/moin/GlobalInterpreterLock) (and `word2vec` training will be [miserably slow](http://rare-technologies.com/word2vec-in-python-part-two-optimizing/)).
+  - ==sg==
+    - 0 for CBOW , 1 for skip-gram
+  - iter
+    - 训练扫描语料库的次数
+
+- ==训练出来有bug啊==
+
+  - print(model)
+    ''''   Word2Vec(vocab=518, size=50, alpha=0.025)  ''''
+  - 分析可能是因为版本的原因
+  - ==原因==
+    - 是mini_count 的原因 mini_count de
+
+ #### Prepare initialization for document weights
+
+- ==使用gensim做lda的实验==
+
+### gensim 
+
+- 
+
+### 新python module
+
+- smart_open
+
+## 5.16
 
 - intuition
   - 做物理实验，从小到大，电梯的建造不是直接建一个很大的模型直接开始重复实验
@@ -132,7 +645,7 @@ resu_de
 
 -  ```python
   doc_decoder = {i: doc_id for i, (doc_id, doc) in enumerate(encoded_docs)}    # 由于我没有删除任何文本 所以我觉得这个毫无意义
-   ```
+  ```
 
 - 
 
@@ -266,7 +779,7 @@ resu_de
   - [No module named google_compute_engine](https://stackoverflow.com/questions/38783140/importerror-no-module-named-google-compute-engine)
 
     - ```
-      sudo rm -f /etc/boto.cfg
+          sudo rm -f /etc/boto.cfg
       ```
 
 ### opencc
