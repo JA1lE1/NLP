@@ -1,5 +1,17 @@
 # README
 
+## 6.20
+
+- 血泪历时
+- 因长时间没有进行相关的git 操作 导致最近的一次文件整理 删掉了很多东西 现在貌似有点完蛋
+  - 对于文件的运行应该在google drive还算是有备份
+  - 没有养成这种git的 和写gitignore 和文件整理的习惯就会乱七八糟
+- 以后每次完成当前的工作都进行git pull的习惯
+
+
+
+
+
 ## 5.21 代码理解
 
 ### 代码块（explore）
@@ -234,8 +246,9 @@
   - _count_unique_tokens的输出结果 Counter的形式
 
 - total_tokens_count
-  - 计算所有的token的数量
-
+  
+- 计算所有的token的数量
+  
 - 返回值
 
   - encoder， decoder， word_counts

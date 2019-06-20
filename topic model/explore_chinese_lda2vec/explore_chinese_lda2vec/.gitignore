@@ -1,0 +1,8 @@
+# 工程环境配置
+venv
+
+#实验结果的数据保存
+*.npy
+
+# wiki-raw 实验数据
+zhwiki-latest-pages-articles.xml.bz2

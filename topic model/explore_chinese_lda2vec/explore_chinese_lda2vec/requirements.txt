@@ -1,0 +1,5 @@
+jieba
+tqdm
+hanziconv
+gensim
+numpy
