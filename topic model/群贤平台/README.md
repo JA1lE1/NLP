@@ -195,7 +195,25 @@
     - 应该是可以的，后期可以再装修，结合线程和进程去解决这些问题
   - 如何将爬取的资料写成xml或者是json更方便地可以进行数据的处理呢？
 
+### 当前的问题
 
+- 如何获取基于时间序列分文本数据
+
+  - [爬取过去某个时间段的新闻](<https://github.com/Heaven-zhw/SinaOldNews>)
+
+  - 研究原作者对于时间戳和爬取参数的设置
+
+  - > url = <http://search.sina.com.cn/?c=news&q=%D3%A2%B9%FA%CD%D1%C5%B7&range=all&time=custom&stime=2016-10-13&etime=2016-12-10&num=20&page=3>
+
+  - ```python
+    url = 'http://search.sina.com.cn/?c=news&q=%D3%A2%B9%FA%CD%D1%C5%B7&range=all&time=custom&stime=' + str(a) + '&etime=' + str(b) + '&num=20&page=' + str(m)
+    
+    # 这里a 代表的是时间戳(年-月-日) b和 a一致的格式 （eg. 2016-10-13:2016-12-10） m代表的是页数
+    ```
+
+  - 以上可以作为爬取的主要依据，具体可以模仿中南工程 再进行装饰
+
+  - 
 
 ### 解决方法
 
@@ -425,7 +443,14 @@ MariaDB [(none)]>
 
 - 如何处理XML文件的数据处理？
 
-  
+### 方法论
+
+- 应该是主要大概的做一个很粗的流水线
+- 因此先行完成还没有进行过的主题分布pyLDAvis的部分和主题演化的可视化展示
+  - 注意，这里需要注意的是数据至少不多，效果不在意
+  - 参考Hacker news的主题演化在最新的fork下（已经fork到github的lda2vec）
+
+
 
 
 
@@ -472,3 +497,14 @@ MariaDB [(none)]>
 
 - 主要的基础测试(20news)在lda2vec-pytorch中，中文的文本后期处理在上次的explore_chinese_lda2vec中有具体的测试。
 - 当前是xml格式的文件处理，应该是对粗爬虫的数据处理，在news-comment-spider中
+
+
+
+
+
+
+
+## 参考内容
+
+- [lda2vec作者的post](<https://multithreaded.stitchfix.com/blog/2016/05/27/lda2vec/#topic=38&lambda=1&term=>)
+
