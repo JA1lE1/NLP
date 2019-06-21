@@ -155,9 +155,54 @@
 
 
 
+### 存在的问题
+
+- 是否使用==预训练的word2vec==会好一些，查看==原作者==的方法(ta貌似是导入google的预训练的数据)，我可以网上找，也可以使用我自己训练的
+- 文本存在的时间信息如何取舍，需要考虑一下
+- 文本似乎过短的在lda2vec-pytorch版本是无法训练，现在问题来了，如何解决这个问题
+- 如何加载预训练的word2vec
+- ==这也是对加载模型如何适应自身模型的一个很重要的实践==
+  - 可以使用预训练的，都是gensim训练有神马不行的，把格式进行调整就可以达到了
+  - 就是讲最后的结果存储成已有的字典模型
+  - ==这个不是优化的过程如果我要使用短文本==
+  - ==这个算是优化的过程，如果我使用长文本==
+  - ==plan==
+    - 先使用长文本，也就是先删掉Nan值，并且还是使用原先有的东西:heavy_check_mark:
+    - 记录这个事情，再产品**正式开发阶段**进行先关的实验，当前是**模型测试实验**
+
+
+
 ### 爬虫
 
 - selenium 的使用 即用法
+
+
+
+## HAcker_news
+
+### lda2vec.ipynb
+
+- story_topics
+
+  - ```python
+    story_topics = pd.DataFrame(dict(story_id_codes=np.arange(dat['doc_topic_dists'].shape[0])))
+    #也就是这个dists 是以story_id来排序的？代表总的语料数目？
+    story_topics[labels[idx]] = dat['doc_topic_dists'][:, idx]
+    ```
+
+
+
+### 大体思想
+
+- 应该是将原始语料进行lda2vec的实验(语料处理方法还不得而知)
+- 训练后的模型的doc_topic_dists应该是以文本id排序（这里需要注意原数据的处理方式）
+- 然后将原始文本经过一定的处理，原始文本带有时间信息，lda是sparse的，当文本带有某个主题，记录其个数再除以总的文本个数就是当前文本的topic_占比，而文本本身包含有时间信息，这样处理后再groupby（time）就能够以时间序列的信息进行可视化的展示。
+
+
+
+### model
+
+- 好像就多了对author的训练（待验证）
 
 
 
@@ -449,6 +494,7 @@ MariaDB [(none)]>
 - 因此先行完成还没有进行过的主题分布pyLDAvis的部分和主题演化的可视化展示
   - 注意，这里需要注意的是数据至少不多，效果不在意
   - 参考Hacker news的主题演化在最新的fork下（已经fork到github的lda2vec）
+- 三个数据预处理的对比 原作者的两个 + pytorch版的一个
 
 
 
@@ -472,6 +518,18 @@ MariaDB [(none)]>
 - （修改使用GP 的Gtext 来使用）
 - 与群贤平台的项目进行兼容
 - ==以快为主，后期再进行装修==
+
+
+
+### 6.21
+
+- 进行Hacker news的复现的实验的时候在tokenize的点遇到了问题打开jupyterlab可看到
+- 研究一下作者的tokenize的思路，修改一下代码，看能不能运行，不行的话，另行它法
+  - 不一定要莽到底
+- Hacker_news
+  - 运行的三个步骤
+    - 1.preprocess
+      - 
 
 
 
@@ -507,4 +565,6 @@ MariaDB [(none)]>
 ## 参考内容
 
 - [lda2vec作者的post](<https://multithreaded.stitchfix.com/blog/2016/05/27/lda2vec/#topic=38&lambda=1&term=>)
+
+
 
