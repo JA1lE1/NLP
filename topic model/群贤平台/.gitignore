@@ -7,3 +7,5 @@ explore_chinese_lda2vec.zip
 lda2vec-master (1).zip
 new-lda2vec
 hacker_news_comments.csv
+*.xml
+*.csv
